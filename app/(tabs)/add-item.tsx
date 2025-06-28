@@ -50,7 +50,6 @@ export default function AddItem() {
     }
 
     try {
-      // Combine van side and bay into location string
       const selectedSide = VAN_SIDES.find(side => side.id === formData.vanSide);
       const selectedBay = VAN_BAYS.find(bay => bay.id === formData.vanBay);
       const location = `${selectedSide?.name} - ${selectedBay?.name}`;
@@ -64,7 +63,7 @@ export default function AddItem() {
         location: location,
         supplier: formData.supplier,
         barcode: formData.barcode,
-        category: 'other' // Default category
+        category: 'other'
       };
       
       await addItem(itemData);
@@ -358,9 +357,11 @@ const styles = StyleSheet.create({
   },
   selectedText: {
     color: '#1e293b',
+    flex: 1,
   },
   placeholderText: {
     color: '#94a3b8',
+    flex: 1,
   },
   helperText: {
     fontSize: 14,
