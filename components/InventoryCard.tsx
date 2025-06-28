@@ -11,7 +11,6 @@ interface InventoryCardProps {
 
 export function InventoryCard({ item, onAdjustStock, onPress }: InventoryCardProps) {
   const category = ITEM_CATEGORIES.find(cat => cat.id === item.category);
-  const stockPercentage = (item.currentStock / item.maxStock) * 100;
   const isLowStock = item.currentStock <= item.minStock;
   const isOutOfStock = item.currentStock === 0;
 
@@ -26,6 +25,7 @@ export function InventoryCard({ item, onAdjustStock, onPress }: InventoryCardPro
       <View style={styles.header}>
         <View style={styles.titleContainer}>
           <Text style={styles.itemName}>{item.name}</Text>
+          <Text style={styles.partNumber}>Part #: {item.partNumber}</Text>
           <View style={[styles.categoryBadge, { backgroundColor: category?.color || '#64748b' }]}>
             <Text style={styles.categoryText}>{category?.name || 'Other'}</Text>
           </View>
@@ -42,26 +42,27 @@ export function InventoryCard({ item, onAdjustStock, onPress }: InventoryCardPro
             {item.currentStock} {item.unit}
           </Text>
         </View>
-        <View style={styles.progressBar}>
-          <View 
-            style={[
-              styles.progressFill, 
-              { 
-                width: `${Math.min(stockPercentage, 100)}%`,
-                backgroundColor: getStockColor()
-              }
-            ]} 
-          />
-        </View>
-        <View style={styles.stockLimits}>
-          <Text style={styles.limitText}>Min: {item.minStock}</Text>
-          <Text style={styles.limitText}>Max: {item.maxStock}</Text>
+        <View style={styles.stockRow}>
+          <Text style={styles.stockLabel}>Low Stock Alert:</Text>
+          <Text style={styles.limitText}>{item.minStock} {item.unit}</Text>
         </View>
       </View>
 
       <View style={styles.details}>
-        <Text style={styles.detailText}>Location: {item.location}</Text>
-        <Text style={styles.detailText}>Price: ${item.price.toFixed(2)}</Text>
+        <View style={styles.detailRow}>
+          <Text style={styles.detailLabel}>Location:</Text>
+          <Text style={styles.detailText}>{item.location}</Text>
+        </View>
+        <View style={styles.detailRow}>
+          <Text style={styles.detailLabel}>Supplier:</Text>
+          <Text style={styles.detailText}>{item.supplier}</Text>
+        </View>
+        {item.barcode && (
+          <View style={styles.detailRow}>
+            <Text style={styles.detailLabel}>Barcode:</Text>
+            <Text style={styles.detailText}>{item.barcode}</Text>
+          </View>
+        )}
       </View>
 
       <View style={styles.actions}>
@@ -113,6 +114,12 @@ const styles = StyleSheet.create({
     color: '#1e293b',
     marginBottom: 4,
   },
+  partNumber: {
+    fontSize: 14,
+    color: '#64748b',
+    marginBottom: 6,
+    fontFamily: 'monospace',
+  },
   categoryBadge: {
     paddingHorizontal: 8,
     paddingVertical: 4,
@@ -131,7 +138,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 8,
+    marginBottom: 6,
   },
   stockLabel: {
     fontSize: 14,
@@ -142,36 +149,31 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '700',
   },
-  progressBar: {
-    height: 6,
-    backgroundColor: '#e2e8f0',
-    borderRadius: 3,
-    marginBottom: 8,
-  },
-  progressFill: {
-    height: '100%',
-    borderRadius: 3,
-    minWidth: 2,
-  },
-  stockLimits: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-  },
   limitText: {
-    fontSize: 12,
+    fontSize: 14,
     color: '#64748b',
   },
   details: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginBottom: 16,
     paddingTop: 12,
     borderTopWidth: 1,
     borderTopColor: '#f1f5f9',
+    marginBottom: 16,
+  },
+  detailRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 4,
+  },
+  detailLabel: {
+    fontSize: 14,
+    color: '#64748b',
+    fontWeight: '500',
   },
   detailText: {
     fontSize: 14,
-    color: '#64748b',
+    color: '#1e293b',
+    flex: 1,
+    textAlign: 'right',
   },
   actions: {
     flexDirection: 'row',

@@ -4,7 +4,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useInventory } from '@/hooks/useInventory';
 import { InventoryCard } from '@/components/InventoryCard';
 import { InventoryItem, ITEM_CATEGORIES, UNITS } from '@/types/inventory';
-import { Search, Filter, CreditCard as Edit, Trash2, X } from 'lucide-react-native';
+import { Search, Filter, X } from 'lucide-react-native';
 
 export default function Inventory() {
   const { items, adjustStock, deleteItem, updateItem } = useInventory();
@@ -16,8 +16,10 @@ export default function Inventory() {
 
   const filteredItems = items.filter(item => {
     const matchesSearch = item.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                         item.partNumber.toLowerCase().includes(searchQuery.toLowerCase()) ||
                          item.category.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                         item.location.toLowerCase().includes(searchQuery.toLowerCase());
+                         item.location.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                         item.supplier.toLowerCase().includes(searchQuery.toLowerCase());
     
     const matchesCategory = selectedCategory === 'all' || item.category === selectedCategory;
     
@@ -68,6 +70,16 @@ export default function Inventory() {
             </View>
 
             <View style={styles.inputGroup}>
+              <Text style={styles.label}>Part Number</Text>
+              <TextInput
+                style={styles.input}
+                value={editingItem.partNumber}
+                onChangeText={(text) => setEditingItem({ ...editingItem, partNumber: text })}
+                placeholder="Enter part number"
+              />
+            </View>
+
+            <View style={styles.inputGroup}>
               <Text style={styles.label}>Current Stock</Text>
               <TextInput
                 style={styles.input}
@@ -79,7 +91,7 @@ export default function Inventory() {
             </View>
 
             <View style={styles.inputGroup}>
-              <Text style={styles.label}>Minimum Stock</Text>
+              <Text style={styles.label}>Low Stock Threshold</Text>
               <TextInput
                 style={styles.input}
                 value={editingItem.minStock.toString()}
@@ -90,18 +102,7 @@ export default function Inventory() {
             </View>
 
             <View style={styles.inputGroup}>
-              <Text style={styles.label}>Maximum Stock</Text>
-              <TextInput
-                style={styles.input}
-                value={editingItem.maxStock.toString()}
-                onChangeText={(text) => setEditingItem({ ...editingItem, maxStock: parseInt(text) || 0 })}
-                placeholder="0"
-                keyboardType="numeric"
-              />
-            </View>
-
-            <View style={styles.inputGroup}>
-              <Text style={styles.label}>Location</Text>
+              <Text style={styles.label}>Van Location</Text>
               <TextInput
                 style={styles.input}
                 value={editingItem.location}
@@ -111,13 +112,22 @@ export default function Inventory() {
             </View>
 
             <View style={styles.inputGroup}>
-              <Text style={styles.label}>Price</Text>
+              <Text style={styles.label}>Supplier</Text>
               <TextInput
                 style={styles.input}
-                value={editingItem.price.toString()}
-                onChangeText={(text) => setEditingItem({ ...editingItem, price: parseFloat(text) || 0 })}
-                placeholder="0.00"
-                keyboardType="decimal-pad"
+                value={editingItem.supplier}
+                onChangeText={(text) => setEditingItem({ ...editingItem, supplier: text })}
+                placeholder="Enter supplier"
+              />
+            </View>
+
+            <View style={styles.inputGroup}>
+              <Text style={styles.label}>Barcode</Text>
+              <TextInput
+                style={styles.input}
+                value={editingItem.barcode || ''}
+                onChangeText={(text) => setEditingItem({ ...editingItem, barcode: text })}
+                placeholder="Enter barcode"
               />
             </View>
 

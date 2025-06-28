@@ -1,16 +1,14 @@
 export interface InventoryItem {
   id: string;
   name: string;
+  partNumber: string;
   category: string;
   currentStock: number;
   minStock: number;
-  maxStock: number;
   unit: string;
   location: string;
-  price: number;
   supplier: string;
   lastRestocked: string;
-  description?: string;
   barcode?: string;
 }
 

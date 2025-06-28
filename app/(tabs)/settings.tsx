@@ -213,9 +213,9 @@ export default function Settings() {
             </View>
             <View style={styles.statItem}>
               <Text style={styles.statValue}>
-                ${items.reduce((sum, item) => sum + (item.currentStock * item.price), 0).toFixed(0)}
+                {new Set(items.map(item => item.category)).size}
               </Text>
-              <Text style={styles.statLabel}>Total Value</Text>
+              <Text style={styles.statLabel}>Categories</Text>
             </View>
           </View>
         </View>

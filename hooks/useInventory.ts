@@ -61,7 +61,7 @@ export function useInventory() {
           id: `${item.id}-out`,
           itemId: item.id,
           type: 'out',
-          message: `${item.name} is out of stock`,
+          message: `${item.name} (${item.partNumber}) is out of stock`,
           timestamp,
         });
       } else if (item.currentStock <= item.minStock) {
@@ -69,15 +69,7 @@ export function useInventory() {
           id: `${item.id}-low`,
           itemId: item.id,
           type: 'low',
-          message: `${item.name} is running low (${item.currentStock} ${item.unit} remaining)`,
-          timestamp,
-        });
-      } else if (item.currentStock > item.maxStock) {
-        newAlerts.push({
-          id: `${item.id}-over`,
-          itemId: item.id,
-          type: 'overstock',
-          message: `${item.name} is overstocked (${item.currentStock} ${item.unit})`,
+          message: `${item.name} (${item.partNumber}) is running low (${item.currentStock} ${item.unit} remaining)`,
           timestamp,
         });
       }
@@ -135,7 +127,9 @@ export function useInventory() {
   };
 
   const getTotalValue = () => {
-    return items.reduce((total, item) => total + (item.currentStock * item.price), 0);
+    // Since we removed price field, we'll return 0 for now
+    // This can be updated if you want to add pricing back later
+    return 0;
   };
 
   const clearAlerts = async () => {

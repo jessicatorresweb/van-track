@@ -9,15 +9,13 @@ export default function AddItem() {
   const { addItem } = useInventory();
   const [formData, setFormData] = useState({
     name: '',
+    partNumber: '',
     category: '',
     currentStock: 0,
     minStock: 0,
-    maxStock: 0,
     unit: 'pieces',
     location: '',
-    price: 0,
     supplier: '',
-    description: '',
     barcode: '',
   });
 
@@ -30,13 +28,23 @@ export default function AddItem() {
       return;
     }
 
+    if (!formData.partNumber.trim()) {
+      Alert.alert('Error', 'Please enter a part number');
+      return;
+    }
+
     if (!formData.category) {
       Alert.alert('Error', 'Please select a category');
       return;
     }
 
-    if (formData.minStock > formData.maxStock) {
-      Alert.alert('Error', 'Minimum stock cannot be greater than maximum stock');
+    if (!formData.supplier.trim()) {
+      Alert.alert('Error', 'Please enter a supplier');
+      return;
+    }
+
+    if (!formData.location.trim()) {
+      Alert.alert('Error', 'Please enter a van location');
       return;
     }
 
@@ -53,15 +61,13 @@ export default function AddItem() {
   const resetForm = () => {
     setFormData({
       name: '',
+      partNumber: '',
       category: '',
       currentStock: 0,
       minStock: 0,
-      maxStock: 0,
       unit: 'pieces',
       location: '',
-      price: 0,
       supplier: '',
-      description: '',
       barcode: '',
     });
   };
@@ -83,6 +89,16 @@ export default function AddItem() {
             value={formData.name}
             onChangeText={(text) => setFormData({ ...formData, name: text })}
             placeholder="Enter item name"
+          />
+        </View>
+
+        <View style={styles.inputGroup}>
+          <Text style={styles.label}>Part Number *</Text>
+          <TextInput
+            style={styles.input}
+            value={formData.partNumber}
+            onChangeText={(text) => setFormData({ ...formData, partNumber: text })}
+            placeholder="Enter part number"
           />
         </View>
 
@@ -165,75 +181,45 @@ export default function AddItem() {
           </View>
         </View>
 
-        <View style={styles.row}>
-          <View style={[styles.inputGroup, styles.flex]}>
-            <Text style={styles.label}>Min Stock</Text>
-            <TextInput
-              style={styles.input}
-              value={formData.minStock.toString()}
-              onChangeText={(text) => setFormData({ ...formData, minStock: parseInt(text) || 0 })}
-              placeholder="0"
-              keyboardType="numeric"
-            />
-          </View>
-          <View style={[styles.inputGroup, styles.flex]}>
-            <Text style={styles.label}>Max Stock</Text>
-            <TextInput
-              style={styles.input}
-              value={formData.maxStock.toString()}
-              onChangeText={(text) => setFormData({ ...formData, maxStock: parseInt(text) || 0 })}
-              placeholder="0"
-              keyboardType="numeric"
-            />
-          </View>
-        </View>
-
-        <View style={styles.row}>
-          <View style={[styles.inputGroup, styles.flex]}>
-            <Text style={styles.label}>Price</Text>
-            <TextInput
-              style={styles.input}
-              value={formData.price.toString()}
-              onChangeText={(text) => setFormData({ ...formData, price: parseFloat(text) || 0 })}
-              placeholder="0.00"
-              keyboardType="decimal-pad"
-            />
-          </View>
-          <View style={[styles.inputGroup, styles.flex]}>
-            <Text style={styles.label}>Location</Text>
-            <TextInput
-              style={styles.input}
-              value={formData.location}
-              onChangeText={(text) => setFormData({ ...formData, location: text })}
-              placeholder="Van location"
-            />
-          </View>
+        <View style={styles.inputGroup}>
+          <Text style={styles.label}>Low Stock Threshold *</Text>
+          <TextInput
+            style={styles.input}
+            value={formData.minStock.toString()}
+            onChangeText={(text) => setFormData({ ...formData, minStock: parseInt(text) || 0 })}
+            placeholder="0"
+            keyboardType="numeric"
+          />
+          <Text style={styles.helperText}>
+            You'll be alerted when stock falls to or below this level
+          </Text>
         </View>
 
         <View style={styles.inputGroup}>
-          <Text style={styles.label}>Supplier</Text>
+          <Text style={styles.label}>Supplier *</Text>
           <TextInput
             style={styles.input}
             value={formData.supplier}
             onChangeText={(text) => setFormData({ ...formData, supplier: text })}
-            placeholder="Supplier name"
+            placeholder="Enter supplier name"
           />
         </View>
 
         <View style={styles.inputGroup}>
-          <Text style={styles.label}>Description</Text>
+          <Text style={styles.label}>Van Location *</Text>
           <TextInput
-            style={[styles.input, styles.textArea]}
-            value={formData.description}
-            onChangeText={(text) => setFormData({ ...formData, description: text })}
-            placeholder="Additional notes or description"
-            multiline
-            numberOfLines={3}
+            style={styles.input}
+            value={formData.location}
+            onChangeText={(text) => setFormData({ ...formData, location: text })}
+            placeholder="e.g., Shelf A, Drawer 2, Tool Box"
           />
+          <Text style={styles.helperText}>
+            Specify where this item is stored in your van
+          </Text>
         </View>
 
         <View style={styles.inputGroup}>
-          <Text style={styles.label}>Barcode</Text>
+          <Text style={styles.label}>Barcode (Optional)</Text>
           <View style={styles.barcodeContainer}>
             <TextInput
               style={[styles.input, styles.barcodeInput]}
@@ -312,6 +298,12 @@ const styles = StyleSheet.create({
   placeholderText: {
     color: '#94a3b8',
   },
+  helperText: {
+    fontSize: 14,
+    color: '#64748b',
+    marginTop: 6,
+    fontStyle: 'italic',
+  },
   pickerContainer: {
     backgroundColor: '#ffffff',
     borderWidth: 1,
@@ -347,10 +339,6 @@ const styles = StyleSheet.create({
   },
   flex: {
     flex: 1,
-  },
-  textArea: {
-    height: 80,
-    textAlignVertical: 'top',
   },
   barcodeContainer: {
     flexDirection: 'row',

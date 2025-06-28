@@ -4,7 +4,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useInventory } from '@/hooks/useInventory';
 import { StatsCard } from '@/components/StatsCard';
 import { AlertCard } from '@/components/AlertCard';
-import { Package, TriangleAlert as AlertTriangle, DollarSign, TrendingDown } from 'lucide-react-native';
+import { Package, TriangleAlert as AlertTriangle, TrendingDown } from 'lucide-react-native';
 import { useRouter } from 'expo-router';
 
 export default function Dashboard() {
@@ -13,8 +13,7 @@ export default function Dashboard() {
     alerts, 
     loading, 
     getLowStockItems, 
-    getOutOfStockItems, 
-    getTotalValue,
+    getOutOfStockItems,
     clearAlerts,
     refreshInventory
   } = useInventory();
@@ -22,7 +21,6 @@ export default function Dashboard() {
 
   const lowStockItems = getLowStockItems();
   const outOfStockItems = getOutOfStockItems();
-  const totalValue = getTotalValue();
 
   const handleRefresh = async () => {
     await refreshInventory();
@@ -75,11 +73,11 @@ export default function Dashboard() {
             icon={<TrendingDown size={20} color="#dc2626" />}
           />
           <StatsCard
-            title="Total Value"
-            value={`$${totalValue.toFixed(0)}`}
-            subtitle="inventory worth"
+            title="Categories"
+            value={new Set(items.map(item => item.category)).size}
+            subtitle="different types"
             color="#16a34a"
-            icon={<DollarSign size={20} color="#16a34a" />}
+            icon={<Package size={20} color="#16a34a" />}
           />
         </View>
 
@@ -129,13 +127,14 @@ export default function Dashboard() {
               <View key={item.id} style={styles.restockItem}>
                 <View style={styles.restockInfo}>
                   <Text style={styles.restockName}>{item.name}</Text>
+                  <Text style={styles.restockPartNumber}>Part #: {item.partNumber}</Text>
                   <Text style={styles.restockStock}>
                     {item.currentStock} {item.unit} remaining
                   </Text>
                 </View>
                 <View style={styles.restockBadge}>
                   <Text style={styles.restockBadgeText}>
-                    Need {item.minStock - item.currentStock + 5}
+                    Need {Math.max(1, item.minStock - item.currentStock + 5)}
                   </Text>
                 </View>
               </View>
@@ -245,7 +244,13 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '600',
     color: '#1e293b',
+    marginBottom: 2,
+  },
+  restockPartNumber: {
+    fontSize: 12,
+    color: '#64748b',
     marginBottom: 4,
+    fontFamily: 'monospace',
   },
   restockStock: {
     fontSize: 14,
