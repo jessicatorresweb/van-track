@@ -7,7 +7,8 @@ import {
   TouchableOpacity, 
   KeyboardAvoidingView,
   Platform,
-  Dimensions
+  Dimensions,
+  Alert
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
@@ -32,6 +33,7 @@ export default function Signup() {
   });
   
   const [formErrors, setFormErrors] = useState<Record<string, string>>({});
+  const [showValidation, setShowValidation] = useState(false);
 
   const validateForm = () => {
     const errors: Record<string, string> = {};
@@ -50,10 +52,8 @@ export default function Signup() {
     
     if (!formData.password) {
       errors.password = 'Password is required';
-    } else if (formData.password.length < 8) {
-      errors.password = 'Password must be at least 8 characters';
-    } else if (!/(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/.test(formData.password)) {
-      errors.password = 'Password must contain uppercase, lowercase, and number';
+    } else if (formData.password.length < 6) {
+      errors.password = 'Password must be at least 6 characters';
     }
     
     if (!formData.confirmPassword) {
@@ -71,16 +71,28 @@ export default function Signup() {
   };
 
   const handleSignup = async () => {
+    console.log('Signup button clicked');
+    setShowValidation(true);
     clearError();
     
-    if (!validateForm()) return;
+    if (!validateForm()) {
+      console.log('Form validation failed:', formErrors);
+      Alert.alert('Validation Error', 'Please fix the errors in the form before continuing.');
+      return;
+    }
     
-    await signup(formData);
+    console.log('Form is valid, attempting signup...');
+    try {
+      await signup(formData);
+      console.log('Signup successful');
+    } catch (err) {
+      console.error('Signup error:', err);
+    }
   };
 
   const handleInputChange = (field: string, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }));
-    if (formErrors[field]) {
+    if (showValidation && formErrors[field]) {
       setFormErrors(prev => ({ ...prev, [field]: '' }));
     }
     if (error) clearError();
@@ -91,7 +103,7 @@ export default function Signup() {
     if (!password) return { strength: 0, label: '', color: '#e2e8f0' };
     
     let strength = 0;
-    if (password.length >= 8) strength++;
+    if (password.length >= 6) strength++;
     if (/[a-z]/.test(password)) strength++;
     if (/[A-Z]/.test(password)) strength++;
     if (/\d/.test(password)) strength++;
@@ -151,7 +163,7 @@ export default function Signup() {
               placeholder="Enter your full name"
               autoCapitalize="words"
               autoComplete="name"
-              error={formErrors.name}
+              error={showValidation ? formErrors.name : undefined}
             />
 
             <AuthInput
@@ -162,7 +174,7 @@ export default function Signup() {
               keyboardType="email-address"
               autoCapitalize="none"
               autoComplete="email"
-              error={formErrors.email}
+              error={showValidation ? formErrors.email : undefined}
             />
 
             <View style={styles.passwordContainer}>
@@ -173,7 +185,7 @@ export default function Signup() {
                 placeholder="Create a strong password"
                 isPassword
                 autoComplete="new-password"
-                error={formErrors.password}
+                error={showValidation ? formErrors.password : undefined}
               />
               {formData.password.length > 0 && (
                 <View style={styles.passwordStrength}>
@@ -202,7 +214,7 @@ export default function Signup() {
               placeholder="Confirm your password"
               isPassword
               autoComplete="new-password"
-              error={formErrors.confirmPassword}
+              error={showValidation ? formErrors.confirmPassword : undefined}
             />
 
             <AuthInput
@@ -220,7 +232,7 @@ export default function Signup() {
               placeholder="+1 (555) 123-4567"
               keyboardType="phone-pad"
               autoComplete="tel"
-              error={formErrors.phone}
+              error={showValidation ? formErrors.phone : undefined}
             />
 
             <View style={styles.termsContainer}>
@@ -236,6 +248,15 @@ export default function Signup() {
             {error && (
               <View style={styles.errorContainer}>
                 <Text style={styles.errorText}>{error}</Text>
+              </View>
+            )}
+
+            {showValidation && Object.keys(formErrors).length > 0 && (
+              <View style={styles.validationSummary}>
+                <Text style={styles.validationTitle}>Please fix the following errors:</Text>
+                {Object.values(formErrors).map((error, index) => (
+                  <Text key={index} style={styles.validationError}>• {error}</Text>
+                ))}
               </View>
             )}
 
@@ -274,7 +295,7 @@ const styles = StyleSheet.create({
   scrollContent: {
     paddingHorizontal: 20,
     paddingBottom: 40,
-    minHeight: screenHeight * 1.2, // Ensure content is scrollable
+    minHeight: screenHeight * 1.2,
   },
   backButton: {
     alignSelf: 'flex-start',
@@ -370,6 +391,25 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#dc2626',
     fontWeight: '500',
+  },
+  validationSummary: {
+    backgroundColor: '#fef3c7',
+    borderRadius: 8,
+    padding: 12,
+    marginBottom: 16,
+    borderLeftWidth: 4,
+    borderLeftColor: '#f59e0b',
+  },
+  validationTitle: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#92400e',
+    marginBottom: 8,
+  },
+  validationError: {
+    fontSize: 13,
+    color: '#92400e',
+    marginBottom: 2,
   },
   loginPrompt: {
     alignItems: 'center',
