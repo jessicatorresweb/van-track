@@ -2,8 +2,8 @@ import React, { useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, TextInput, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useInventory } from '@/hooks/useInventory';
-import { UNITS } from '@/types/inventory';
-import { Plus, Camera, Check } from 'lucide-react-native';
+import { UNITS, VAN_SIDES, VAN_BAYS } from '@/types/inventory';
+import { Plus, Camera, Check, ChevronDown } from 'lucide-react-native';
 
 export default function AddItem() {
   const { addItem } = useInventory();
@@ -13,12 +13,15 @@ export default function AddItem() {
     currentStock: 0,
     minStock: 0,
     unit: 'pieces',
-    location: '',
+    vanSide: '',
+    vanBay: '',
     supplier: '',
     barcode: '',
   });
 
   const [showUnitPicker, setShowUnitPicker] = useState(false);
+  const [showVanSidePicker, setShowVanSidePicker] = useState(false);
+  const [showVanBayPicker, setShowVanBayPicker] = useState(false);
 
   const handleSubmit = async () => {
     if (!formData.name.trim()) {
@@ -36,17 +39,34 @@ export default function AddItem() {
       return;
     }
 
-    if (!formData.location.trim()) {
-      Alert.alert('Error', 'Please enter a van location');
+    if (!formData.vanSide) {
+      Alert.alert('Error', 'Please select which side of the van');
+      return;
+    }
+
+    if (!formData.vanBay) {
+      Alert.alert('Error', 'Please select a bay/compartment');
       return;
     }
 
     try {
-      // Add default category since it's still required in the data structure
+      // Combine van side and bay into location string
+      const selectedSide = VAN_SIDES.find(side => side.id === formData.vanSide);
+      const selectedBay = VAN_BAYS.find(bay => bay.id === formData.vanBay);
+      const location = `${selectedSide?.name} - ${selectedBay?.name}`;
+
       const itemData = {
-        ...formData,
+        name: formData.name,
+        partNumber: formData.partNumber,
+        currentStock: formData.currentStock,
+        minStock: formData.minStock,
+        unit: formData.unit,
+        location: location,
+        supplier: formData.supplier,
+        barcode: formData.barcode,
         category: 'other' // Default category
       };
+      
       await addItem(itemData);
       Alert.alert('Success', 'Item added successfully', [
         { text: 'OK', onPress: resetForm }
@@ -63,11 +83,15 @@ export default function AddItem() {
       currentStock: 0,
       minStock: 0,
       unit: 'pieces',
-      location: '',
+      vanSide: '',
+      vanBay: '',
       supplier: '',
       barcode: '',
     });
   };
+
+  const selectedVanSide = VAN_SIDES.find(side => side.id === formData.vanSide);
+  const selectedVanBay = VAN_BAYS.find(bay => bay.id === formData.vanBay);
 
   return (
     <SafeAreaView style={styles.container}>
@@ -115,6 +139,7 @@ export default function AddItem() {
               onPress={() => setShowUnitPicker(!showUnitPicker)}
             >
               <Text style={styles.selectedText}>{formData.unit}</Text>
+              <ChevronDown size={16} color="#64748b" />
             </TouchableOpacity>
             {showUnitPicker && (
               <View style={styles.pickerContainer}>
@@ -165,17 +190,94 @@ export default function AddItem() {
           />
         </View>
 
-        <View style={styles.inputGroup}>
-          <Text style={styles.label}>Van Location *</Text>
-          <TextInput
-            style={styles.input}
-            value={formData.location}
-            onChangeText={(text) => setFormData({ ...formData, location: text })}
-            placeholder="e.g., Shelf A, Drawer 2, Tool Box"
-          />
-          <Text style={styles.helperText}>
+        <View style={styles.locationSection}>
+          <Text style={styles.sectionTitle}>Van Location *</Text>
+          <Text style={styles.sectionSubtitle}>
             Specify where this item is stored in your van
           </Text>
+
+          <View style={styles.row}>
+            <View style={[styles.inputGroup, styles.flex]}>
+              <Text style={styles.label}>Van Side</Text>
+              <TouchableOpacity
+                style={[styles.input, styles.pickerInput]}
+                onPress={() => setShowVanSidePicker(!showVanSidePicker)}
+              >
+                <Text style={formData.vanSide ? styles.selectedText : styles.placeholderText}>
+                  {selectedVanSide ? selectedVanSide.name : 'Select side'}
+                </Text>
+                <ChevronDown size={16} color="#64748b" />
+              </TouchableOpacity>
+              {showVanSidePicker && (
+                <View style={styles.pickerContainer}>
+                  {VAN_SIDES.map(side => (
+                    <TouchableOpacity
+                      key={side.id}
+                      style={[
+                        styles.pickerOption,
+                        formData.vanSide === side.id && styles.selectedOption
+                      ]}
+                      onPress={() => {
+                        setFormData({ ...formData, vanSide: side.id });
+                        setShowVanSidePicker(false);
+                      }}
+                    >
+                      <Text style={styles.pickerOptionText}>{side.name}</Text>
+                      {formData.vanSide === side.id && (
+                        <Check size={16} color="#2563eb" />
+                      )}
+                    </TouchableOpacity>
+                  ))}
+                </View>
+              )}
+            </View>
+
+            <View style={[styles.inputGroup, styles.flex]}>
+              <Text style={styles.label}>Bay/Compartment</Text>
+              <TouchableOpacity
+                style={[styles.input, styles.pickerInput]}
+                onPress={() => setShowVanBayPicker(!showVanBayPicker)}
+              >
+                <Text style={formData.vanBay ? styles.selectedText : styles.placeholderText}>
+                  {selectedVanBay ? selectedVanBay.name : 'Select bay'}
+                </Text>
+                <ChevronDown size={16} color="#64748b" />
+              </TouchableOpacity>
+              {showVanBayPicker && (
+                <View style={styles.pickerContainer}>
+                  <ScrollView style={styles.pickerScrollView} nestedScrollEnabled>
+                    {VAN_BAYS.map(bay => (
+                      <TouchableOpacity
+                        key={bay.id}
+                        style={[
+                          styles.pickerOption,
+                          formData.vanBay === bay.id && styles.selectedOption
+                        ]}
+                        onPress={() => {
+                          setFormData({ ...formData, vanBay: bay.id });
+                          setShowVanBayPicker(false);
+                        }}
+                      >
+                        <Text style={styles.pickerOptionText}>{bay.name}</Text>
+                        {formData.vanBay === bay.id && (
+                          <Check size={16} color="#2563eb" />
+                        )}
+                      </TouchableOpacity>
+                    ))}
+                  </ScrollView>
+                </View>
+              )}
+            </View>
+          </View>
+
+          {formData.vanSide && formData.vanBay && (
+            <View style={styles.locationPreview}>
+              <Text style={styles.locationPreviewLabel}>Location Preview:</Text>
+              <Text style={styles.locationPreviewText}>
+                {selectedVanSide?.name} - {selectedVanBay?.name}
+              </Text>
+            </View>
+          )}
         </View>
 
         <View style={styles.inputGroup}>
@@ -250,16 +352,59 @@ const styles = StyleSheet.create({
     color: '#1e293b',
   },
   pickerInput: {
-    justifyContent: 'center',
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
   },
   selectedText: {
     color: '#1e293b',
+  },
+  placeholderText: {
+    color: '#94a3b8',
   },
   helperText: {
     fontSize: 14,
     color: '#64748b',
     marginTop: 6,
     fontStyle: 'italic',
+  },
+  locationSection: {
+    backgroundColor: '#ffffff',
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 20,
+    borderWidth: 1,
+    borderColor: '#e2e8f0',
+  },
+  sectionTitle: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: '#1e293b',
+    marginBottom: 4,
+  },
+  sectionSubtitle: {
+    fontSize: 14,
+    color: '#64748b',
+    marginBottom: 16,
+  },
+  locationPreview: {
+    backgroundColor: '#f8fafc',
+    borderRadius: 8,
+    padding: 12,
+    marginTop: 12,
+    borderLeftWidth: 4,
+    borderLeftColor: '#2563eb',
+  },
+  locationPreviewLabel: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#64748b',
+    marginBottom: 4,
+  },
+  locationPreviewText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#2563eb',
   },
   pickerContainer: {
     backgroundColor: '#ffffff',
@@ -268,6 +413,11 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     marginTop: 8,
     maxHeight: 200,
+    position: 'relative',
+    zIndex: 1000,
+  },
+  pickerScrollView: {
+    maxHeight: 180,
   },
   pickerOption: {
     flexDirection: 'row',

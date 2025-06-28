@@ -40,3 +40,31 @@ export const ITEM_CATEGORIES: Category[] = [
 export const UNITS = [
   'pieces', 'meters', 'feet', 'liters', 'gallons', 'kg', 'lbs', 'boxes', 'rolls', 'tubes'
 ];
+
+export const VAN_SIDES = [
+  { id: 'driver', name: 'Driver Side' },
+  { id: 'passenger', name: 'Passenger Side' },
+  { id: 'rear', name: 'Rear' },
+  { id: 'front', name: 'Front/Cab' },
+];
+
+export const VAN_BAYS = [
+  { id: 'upper-1', name: 'Upper Bay 1' },
+  { id: 'upper-2', name: 'Upper Bay 2' },
+  { id: 'upper-3', name: 'Upper Bay 3' },
+  { id: 'middle-1', name: 'Middle Bay 1' },
+  { id: 'middle-2', name: 'Middle Bay 2' },
+  { id: 'middle-3', name: 'Middle Bay 3' },
+  { id: 'lower-1', name: 'Lower Bay 1' },
+  { id: 'lower-2', name: 'Lower Bay 2' },
+  { id: 'lower-3', name: 'Lower Bay 3' },
+  { id: 'floor', name: 'Floor Storage' },
+  { id: 'toolbox-1', name: 'Tool Box 1' },
+  { id: 'toolbox-2', name: 'Tool Box 2' },
+  { id: 'drawer-1', name: 'Drawer 1' },
+  { id: 'drawer-2', name: 'Drawer 2' },
+  { id: 'drawer-3', name: 'Drawer 3' },
+  { id: 'shelf-a', name: 'Shelf A' },
+  { id: 'shelf-b', name: 'Shelf B' },
+  { id: 'shelf-c', name: 'Shelf C' },
+];
