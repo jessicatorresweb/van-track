@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, TextInput, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useInventory } from '@/hooks/useInventory';
-import { ITEM_CATEGORIES, UNITS } from '@/types/inventory';
+import { UNITS } from '@/types/inventory';
 import { Plus, Camera, Check } from 'lucide-react-native';
 
 export default function AddItem() {
@@ -10,7 +10,6 @@ export default function AddItem() {
   const [formData, setFormData] = useState({
     name: '',
     partNumber: '',
-    category: '',
     currentStock: 0,
     minStock: 0,
     unit: 'pieces',
@@ -19,7 +18,6 @@ export default function AddItem() {
     barcode: '',
   });
 
-  const [showCategoryPicker, setShowCategoryPicker] = useState(false);
   const [showUnitPicker, setShowUnitPicker] = useState(false);
 
   const handleSubmit = async () => {
@@ -30,11 +28,6 @@ export default function AddItem() {
 
     if (!formData.partNumber.trim()) {
       Alert.alert('Error', 'Please enter a part number');
-      return;
-    }
-
-    if (!formData.category) {
-      Alert.alert('Error', 'Please select a category');
       return;
     }
 
@@ -49,7 +42,12 @@ export default function AddItem() {
     }
 
     try {
-      await addItem(formData);
+      // Add default category since it's still required in the data structure
+      const itemData = {
+        ...formData,
+        category: 'other' // Default category
+      };
+      await addItem(itemData);
       Alert.alert('Success', 'Item added successfully', [
         { text: 'OK', onPress: resetForm }
       ]);
@@ -62,7 +60,6 @@ export default function AddItem() {
     setFormData({
       name: '',
       partNumber: '',
-      category: '',
       currentStock: 0,
       minStock: 0,
       unit: 'pieces',
@@ -71,8 +68,6 @@ export default function AddItem() {
       barcode: '',
     });
   };
-
-  const selectedCategory = ITEM_CATEGORIES.find(cat => cat.id === formData.category);
 
   return (
     <SafeAreaView style={styles.container}>
@@ -100,41 +95,6 @@ export default function AddItem() {
             onChangeText={(text) => setFormData({ ...formData, partNumber: text })}
             placeholder="Enter part number"
           />
-        </View>
-
-        <View style={styles.inputGroup}>
-          <Text style={styles.label}>Category *</Text>
-          <TouchableOpacity
-            style={[styles.input, styles.pickerInput]}
-            onPress={() => setShowCategoryPicker(!showCategoryPicker)}
-          >
-            <Text style={formData.category ? styles.selectedText : styles.placeholderText}>
-              {selectedCategory ? selectedCategory.name : 'Select category'}
-            </Text>
-          </TouchableOpacity>
-          {showCategoryPicker && (
-            <View style={styles.pickerContainer}>
-              {ITEM_CATEGORIES.map(category => (
-                <TouchableOpacity
-                  key={category.id}
-                  style={[
-                    styles.pickerOption,
-                    formData.category === category.id && styles.selectedOption
-                  ]}
-                  onPress={() => {
-                    setFormData({ ...formData, category: category.id });
-                    setShowCategoryPicker(false);
-                  }}
-                >
-                  <View style={[styles.categoryDot, { backgroundColor: category.color }]} />
-                  <Text style={styles.pickerOptionText}>{category.name}</Text>
-                  {formData.category === category.id && (
-                    <Check size={16} color="#2563eb" />
-                  )}
-                </TouchableOpacity>
-              ))}
-            </View>
-          )}
         </View>
 
         <View style={styles.row}>
@@ -295,9 +255,6 @@ const styles = StyleSheet.create({
   selectedText: {
     color: '#1e293b',
   },
-  placeholderText: {
-    color: '#94a3b8',
-  },
   helperText: {
     fontSize: 14,
     color: '#64748b',
@@ -326,12 +283,6 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: '#1e293b',
     flex: 1,
-  },
-  categoryDot: {
-    width: 12,
-    height: 12,
-    borderRadius: 6,
-    marginRight: 12,
   },
   row: {
     flexDirection: 'row',
