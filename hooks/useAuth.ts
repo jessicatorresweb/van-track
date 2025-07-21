@@ -13,7 +13,7 @@ const mockLogin = async (credentials: LoginCredentials): Promise<User> => {
   await new Promise(resolve => setTimeout(resolve, 1500));
   
   // Mock validation
-  if (credentials.email === 'demo@example.com' && credentials.password === 'password') {
+  if (credentials.email.toLowerCase() === 'demo@example.com' && credentials.password === 'password') {
     return {
       id: '1',
       email: credentials.email,
@@ -32,7 +32,7 @@ const mockSignup = async (credentials: SignupCredentials): Promise<User> => {
   await new Promise(resolve => setTimeout(resolve, 2000));
   
   // Mock validation
-  if (credentials.email === 'existing@example.com') {
+  if (credentials.email.toLowerCase() === 'existing@example.com') {
     throw new Error('An account with this email already exists');
   }
   

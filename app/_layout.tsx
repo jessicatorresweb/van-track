@@ -22,9 +22,11 @@ export default function RootLayout() {
       router.replace('/auth/welcome');
     } else if (isAuthenticated && inAuthGroup) {
       // User is authenticated but still in auth screens, redirect to main app
-      router.replace('/(tabs)');
+      setTimeout(() => {
+        router.replace('/(tabs)');
+      }, 100);
     }
-  }, [isAuthenticated, loading, segments]);
+  }, [isAuthenticated, loading, segments, router]);
 
   if (loading) {
     return null; // Show splash screen while loading
