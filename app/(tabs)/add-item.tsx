@@ -273,7 +273,7 @@ export default function AddItem() {
             <View style={styles.locationPreview}>
               <Text style={styles.locationPreviewLabel}>Location Preview:</Text>
               <Text style={styles.locationPreviewText}>
-                {selectedVanSide?.name} - {selectedVanBay?.name}
+                {selectedVanSide?.name || ''} - {selectedVanBay?.name || ''}
               </Text>
             </View>
           )}
