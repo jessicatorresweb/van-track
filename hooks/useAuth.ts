@@ -1,48 +1,17 @@
-import { useState, useEffect, createContext, useContext } from 'react';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import { User, AuthState, LoginCredentials, SignupCredentials } from '@/types/auth';
+import { supabase } from '@/lib/supabase';
+import type { User as SupabaseUser } from '@supabase/supabase-js';
+import { useState, useEffect } from 'react';
 
-const AUTH_STORAGE_KEY = '@van_inventory_auth';
-const USER_STORAGE_KEY = '@van_inventory_user';
-const INVENTORY_STORAGE_KEY = '@van_inventory';
-const ALERTS_STORAGE_KEY = '@van_alerts';
-
-// Mock authentication - replace with real API calls
-const mockLogin = async (credentials: LoginCredentials): Promise<User> => {
-  // Simulate API delay
-  await new Promise(resolve => setTimeout(resolve, 1500));
-  
-  // Mock validation
-  if (credentials.email.toLowerCase() === 'demo@example.com' && credentials.password === 'password') {
-    return {
-      id: '1',
-      email: credentials.email,
-      name: 'John Smith',
-      company: 'Smith Plumbing',
-      phone: '+1 (555) 123-4567',
-      createdAt: new Date().toISOString(),
-    };
-  }
-  
-  throw new Error('Invalid email or password');
-};
-
-const mockSignup = async (credentials: SignupCredentials): Promise<User> => {
-  // Simulate API delay
-  await new Promise(resolve => setTimeout(resolve, 2000));
-  
-  // Mock validation
-  if (credentials.email.toLowerCase() === 'existing@example.com') {
-    throw new Error('An account with this email already exists');
-  }
-  
+// Convert Supabase user to our User type
+const convertSupabaseUser = (supabaseUser: SupabaseUser, profile?: any): User => {
   return {
-    id: Date.now().toString(),
-    email: credentials.email,
-    name: credentials.name,
-    company: credentials.company,
-    phone: credentials.phone,
-    createdAt: new Date().toISOString(),
+    id: supabaseUser.id,
+    email: supabaseUser.email || '',
+    name: profile?.name || supabaseUser.user_metadata?.name || '',
+    company: profile?.company || supabaseUser.user_metadata?.company || '',
+    phone: profile?.phone || supabaseUser.user_metadata?.phone || '',
+    createdAt: supabaseUser.created_at || new Date().toISOString(),
   };
 };
 
@@ -55,111 +24,123 @@ export function useAuth() {
   });
 
   useEffect(() => {
-    loadStoredAuth();
-  }, []);
-
-  const loadStoredAuth = async () => {
-    try {
-      const [storedAuth, storedUser] = await Promise.all([
-        AsyncStorage.getItem(AUTH_STORAGE_KEY),
-        AsyncStorage.getItem(USER_STORAGE_KEY),
-      ]);
-
-      if (storedAuth === 'true' && storedUser) {
-        const user = JSON.parse(storedUser);
-        setAuthState({
-          user,
-          isAuthenticated: true,
-          loading: false,
-          error: null,
-        });
+    // Get initial session
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session?.user) {
+        loadUserProfile(session.user);
       } else {
         setAuthState(prev => ({ ...prev, loading: false }));
       }
+    });
+
+    // Listen for auth changes
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+      if (event === 'SIGNED_IN' && session?.user) {
+        await loadUserProfile(session.user);
+      } else if (event === 'SIGNED_OUT') {
+        setAuthState({
+          user: null,
+          isAuthenticated: false,
+          loading: false,
+          error: null,
+        });
+      }
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
+
+  const loadUserProfile = async (supabaseUser: SupabaseUser) => {
+    try {
+      // Try to get user profile from database
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', supabaseUser.id)
+        .single();
+
+      const user = convertSupabaseUser(supabaseUser, profile);
+      
+      setAuthState({
+        user,
+        isAuthenticated: true,
+        loading: false,
+        error: null,
+      });
     } catch (error) {
-      setAuthState(prev => ({ ...prev, loading: false, error: 'Failed to load authentication' }));
+      console.error('Error loading user profile:', error);
+      // Still set user even if profile fetch fails
+      const user = convertSupabaseUser(supabaseUser);
+      setAuthState({
+        user,
+        isAuthenticated: true,
+        loading: false,
+        error: null,
+      });
     }
   };
 
   const login = async (credentials: LoginCredentials) => {
-    setAuthState(prev => ({ ...prev, loading: true, error: null }));
-    
     try {
-      const user = await mockLogin(credentials);
-      
-      await Promise.all([
-        AsyncStorage.setItem(AUTH_STORAGE_KEY, 'true'),
-        AsyncStorage.setItem(USER_STORAGE_KEY, JSON.stringify(user)),
-      ]);
-
-      setAuthState({
-        user,
-        isAuthenticated: true,
-        loading: false,
-        error: null,
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email: credentials.email,
+        password: credentials.password,
       });
+
+      if (error) {
+        throw error;
+      }
+
+      // User state will be updated via the auth state change listener
     } catch (error) {
       setAuthState(prev => ({
         ...prev,
-        loading: false,
         error: error instanceof Error ? error.message : 'Login failed',
       }));
+      throw error;
     }
   };
 
   const signup = async (credentials: SignupCredentials) => {
-    setAuthState(prev => ({ ...prev, loading: true, error: null }));
-    
     try {
-      const user = await mockSignup(credentials);
-      
-      await Promise.all([
-        AsyncStorage.setItem(AUTH_STORAGE_KEY, 'true'),
-        AsyncStorage.setItem(USER_STORAGE_KEY, JSON.stringify(user)),
-      ]);
-
-      setAuthState({
-        user,
-        isAuthenticated: true,
-        loading: false,
-        error: null,
+      const { data, error } = await supabase.auth.signUp({
+        email: credentials.email,
+        password: credentials.password,
+        options: {
+          data: {
+            name: credentials.name,
+            company: credentials.company,
+            phone: credentials.phone,
+          }
+        }
       });
+
+      if (error) {
+        throw error;
+      }
+
+      // User state will be updated via the auth state change listener
     } catch (error) {
       setAuthState(prev => ({
         ...prev,
-        loading: false,
         error: error instanceof Error ? error.message : 'Signup failed',
       }));
+      throw error;
     }
   };
 
   const logout = async () => {
     try {
-      // Set loading state for logout process
-      setAuthState(prev => ({ ...prev, loading: true }));
-
-      // Clear all stored data including inventory and alerts
-      await Promise.all([
-        AsyncStorage.removeItem(AUTH_STORAGE_KEY),
-        AsyncStorage.removeItem(USER_STORAGE_KEY),
-        AsyncStorage.removeItem(INVENTORY_STORAGE_KEY),
-        AsyncStorage.removeItem(ALERTS_STORAGE_KEY),
-      ]);
-
-      // Reset auth state
-      setAuthState({
-        user: null,
-        isAuthenticated: false,
-        loading: false,
-        error: null,
-      });
-
-      // Optional: Add a small delay for better UX
-      await new Promise(resolve => setTimeout(resolve, 500));
+      const { error } = await supabase.auth.signOut();
       
+      if (error) {
+        throw error;
+      }
+
+      // Auth state will be updated via the auth state change listener
     } catch (error) {
       console.error('Logout error:', error);
-      // Even if there's an error clearing storage, still log out the user
+      // Even if there's an error, still clear the local state
       setAuthState({
         user: null,
         isAuthenticated: false,
