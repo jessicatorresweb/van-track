@@ -13,7 +13,7 @@ const mockLogin = async (credentials: LoginCredentials): Promise<User> => {
   await new Promise(resolve => setTimeout(resolve, 1500));
   
   // Mock validation
-  if (credentials.email.toLowerCase() === 'demo@example.com' && credentials.password === 'password') {
+  if (credentials.email.toLowerCase().trim() === 'demo@example.com' && credentials.password.trim() === 'password') {
     return {
       id: '1',
       email: credentials.email,
