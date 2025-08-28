@@ -2,27 +2,13 @@ import React, { useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Switch, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useInventory } from '@/hooks/useInventory';
-import { useAuth } from '@/hooks/useAuth';
 import { Bell, Database, Download, Upload, Trash2, Info, Shield, CircleHelp as HelpCircle, LogOut, User } from 'lucide-react-native';
-import { SignOutConfirmation } from '@/components/SignOutConfirmation';
 
 export default function Settings() {
   const { items, clearAlerts } = useInventory();
-  const { user, logout, loading: authLoading } = useAuth();
   const [notifications, setNotifications] = useState(true);
   const [autoBackup, setAutoBackup] = useState(false);
   const [lowStockAlerts, setLowStockAlerts] = useState(true);
-  const [showSignOutModal, setShowSignOutModal] = useState(false);
-
-  const handleLogout = async () => {
-    try {
-      await logout();
-      setShowSignOutModal(false);
-    } catch (error) {
-      console.error('Logout error:', error);
-      Alert.alert('Error', 'Failed to sign out. Please try again.');
-    }
-  };
 
   const handleExportData = () => {
     Alert.alert(
@@ -115,24 +101,6 @@ export default function Settings() {
       </View>
 
       <ScrollView style={styles.content}>
-        {user && (
-          <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Account</Text>
-            <View style={styles.userCard}>
-              <View style={styles.userIcon}>
-                <User size={24} color="#2563eb" />
-              </View>
-              <View style={styles.userInfo}>
-                <Text style={styles.userName}>{user.name}</Text>
-                <Text style={styles.userEmail}>{user.email}</Text>
-                {user.company && (
-                  <Text style={styles.userCompany}>{user.company}</Text>
-                )}
-              </View>
-            </View>
-          </View>
-        )}
-
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Notifications</Text>
           <SettingItem
@@ -237,17 +205,6 @@ export default function Settings() {
         </View>
 
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Account Actions</Text>
-          <SettingItem
-            icon={<LogOut size={20} color="#dc2626" />}
-            title="Sign Out"
-            subtitle="Sign out and clear all local data"
-            onPress={() => setShowSignOutModal(true)}
-            danger
-          />
-        </View>
-
-        <View style={styles.section}>
           <Text style={styles.sectionTitle}>Danger Zone</Text>
           <SettingItem
             icon={<Trash2 size={20} color="#dc2626" />}
@@ -258,13 +215,6 @@ export default function Settings() {
           />
         </View>
       </ScrollView>
-
-      <SignOutConfirmation
-        visible={showSignOutModal}
-        onConfirm={handleLogout}
-        onCancel={() => setShowSignOutModal(false)}
-        loading={authLoading}
-      />
     </SafeAreaView>
   );
 }
